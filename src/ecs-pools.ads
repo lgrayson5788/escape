@@ -39,7 +39,14 @@ package ECS.Pools is
    function Mask return W.Signature;
    --  Convenience: the single-bit signature for this component.
 
-   procedure Clear;
+   function Check_Invariant return Boolean;
+   --  Verifies Sparse (Owners (I)) = I across the whole pool.  Call this
+   --  after every mutation in tests.  The back-pointer fixup in Unset is the
+   --  single easiest thing to get wrong in this design, and getting it wrong
+   --  corrupts silently.
+
+   procedure Clear
+      with Post => Check_Invariant and then Count = 0;
 
    ---------------------------------------------------------------------------
    --  Random access
@@ -48,9 +55,12 @@ package ECS.Pools is
    function Has (E : Entity) return Boolean with Inline;
 
    function Get (E : Entity) return Component
-     with Pre => Has (E);
+     with Pre => Has (E) and then Check_Invariant;
 
-   procedure Set (E : Entity; To : Component; Ok : out Boolean);
+   procedure Set (E : Entity; To : Component; Ok : out Boolean)
+      with Pre => Check_Invariant,
+           Post => Check_Invariant
+                     and then (if Ok then Has (E) and then Get (E) = To);
    --  Attaches, or overwrites if already present.  Ok is False only on
    --  capacity exhaustion (bounded backing) or a dead handle.  Never raises.
 
@@ -72,16 +82,13 @@ package ECS.Pools is
 
    function Value (I : Positive) return Component with Pre => I <= Count;
 
-   procedure Update (I : Positive; To : Component) with Pre => I <= Count;
+   procedure Update (I : Positive; To : Component)
+         with Pre => I <= Count,
+              Post => Count = Count'Old
+                     and then Check_Invariant
+                     and then Value (I) = To;
 
    ---------------------------------------------------------------------------
    --  Testing
    ---------------------------------------------------------------------------
-
-   function Check_Invariant return Boolean;
-   --  Verifies Sparse (Owners (I)) = I across the whole pool.  Call this
-   --  after every mutation in tests.  The back-pointer fixup in Unset is the
-   --  single easiest thing to get wrong in this design, and getting it wrong
-   --  corrupts silently.
-
 end ECS.Pools;

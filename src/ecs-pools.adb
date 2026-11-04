@@ -76,9 +76,8 @@ package body ECS.Pools is
    --  must not see the new occupant's component.
 
    function Has (E : Entity) return Boolean is
-      pragma Unreferenced (E);
    begin
-      return False;
+      return W.Alive (E) and then Sparse.Lookup (S, E.Index) /= 0;
    end Has;
 
    ---------
@@ -90,12 +89,8 @@ package body ECS.Pools is
    --  the slot is non-zero; do not re-check it here.
 
    function Get (E : Entity) return Component is
-      pragma Unreferenced (E);
-      None : Component;
-      pragma Warnings (Off, None);   --  placeholder: never reached
    begin
-      raise Program_Error with "Pools.Get: milestone 1 not implemented";
-      return None;
+      return Values.Item (V, Sparse.Lookup (S, E.Index));
    end Get;
 
    -----------
@@ -201,5 +196,6 @@ package body ECS.Pools is
 
 begin
    Clear;
+   --  SPARK_MODE => OFF
    W.Register_Component (Kind, Detach'Access);
 end ECS.Pools;
