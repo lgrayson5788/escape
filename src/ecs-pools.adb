@@ -131,9 +131,32 @@ package body ECS.Pools is
    --    6. W.Note_Added (E, Kind).                Keep the signature in sync.
 
    procedure Set (E : Entity; To : Component; Ok : out Boolean) is
-      pragma Unreferenced (E, To);
+      Slot : constant Natural := (if W.Alive (E) then Sparse.Lookup (S, E.Index) else 0);
    begin
-      Ok := False;
+      if not W.Alive (E) then
+         Ok := False;
+         return;
+      end if;
+
+      if Slot /= 0 then
+         Values.Replace (V, Slot, To);
+         Ok := True;
+         return;
+      end if;
+
+      Owners.Append (O, E.Index, Ok);
+      if not Ok then
+         return;
+      end if;
+
+      Values.Append (V, To, Ok);
+      if not Ok then
+         Owners.Swap_Remove (O, Owners.Length (O));
+         return;
+      end if;
+
+      Sparse.Assign (S, E.Index, Owners.Length (O));
+      W.Note_Added (E, Kind);
    end Set;
 
    -----------
@@ -146,9 +169,13 @@ package body ECS.Pools is
    --  Note_Removed after Detach, and only here, never in Detach.
 
    procedure Unset (E : Entity) is
-      pragma Unreferenced (E);
    begin
-      null;
+      if not W.Alive (E) or else Sparse.Lookup (S, E.Index) = 0 then
+         return;
+      end if;
+
+      Detach (E.Index);
+      W.Note_Removed (E, Kind);
    end Unset;
 
    ------------
