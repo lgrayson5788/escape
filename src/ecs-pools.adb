@@ -195,9 +195,20 @@ package body ECS.Pools is
    --    4. Assign (S, Index, 0).  The removed entity has no slot.
 
    procedure Detach (Index : Entity_Index) is
-      pragma Unreferenced (Index);
+      Slot_No : constant Natural := Sparse.Lookup (S, Index);
    begin
-      null;
+      if Slot_No = 0 then
+         return;
+      end if;
+
+      Owners.Swap_Remove (O, Slot_No);
+      Values.Swap_Remove (V, Slot_No);
+
+      if Slot_No <= Owners.Length (O) then
+         Sparse.Assign (S, Owners.Item (O, Slot_No), Slot_No);
+      end if;
+
+      Sparse.Assign (S, Index, 0);
    end Detach;
 
    ---------------------
