@@ -10,7 +10,7 @@ project Demo is
    for Object_Dir use "obj/" & Target;
    for Exec_Dir use "bin/" & Target;
    for Create_Missing_Dirs use "True";
-   for Main use ("stress.adb");
+   for Main use ("main.adb", "stress.adb");
    package Compiler is
       for Default_Switches ("Ada") use
         ("-gnat2022", "-gnata", "-gnatwa", "-gnatwe", "-gnatVa", "-gnatyg", "-gnatyM100", "-g", "-O2");
