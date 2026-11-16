@@ -222,21 +222,18 @@ package body ECS.Pools with SPARK_Mode is
    --  The oracle.  Kept complete on purpose.
 
    function Check_Invariant return Boolean is
-   begin
-      if Owners.Length (O) /= Values.Length (V) then
-         return False;
-      end if;
+      (Owners.Length (O) = Values.Length (V)
+      and then
+         (for all I in 1 .. Owners.Length (O) =>
+            Sparse.Lookup (S, Owners.Item (O, I)) = I)
+         and then
+            (for all Idx in 1 .. W.Last_Slot =>
+               Sparse.Lookup (S, Idx) <= Owners.Length (O)
+            and then
+               (if Sparse.Lookup (S, Idx) /= 0 then
+                  Owners.Item (O, Sparse.Lookup (S, Idx)) = Idx)));
 
-      for I in 1 .. Owners.Length (O) loop
-         if Sparse.Lookup (S, Owners.Item (O, I)) /= I then
-            return False;
-         end if;
-      end loop;
-
-      return True;
-   end Check_Invariant;
-
-procedure Register_Pool with SPARK_Mode => Off is
+   procedure Register_Pool with SPARK_Mode => Off is
    begin
       W.Register_Component (Kind, Detach'Access);
    end Register_Pool;
