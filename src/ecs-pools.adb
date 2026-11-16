@@ -31,13 +31,17 @@
 --  from Detach (see its comment).
 ------------------------------------------------------------------------------
 
-package body ECS.Pools is
+package body ECS.Pools with SPARK_Mode is
 
    V : Values.Sequence;
    O : Owners.Sequence;
    S : Sparse.Map;
 
-   procedure Detach (Index : Entity_Index);
+   procedure Register_Pool with Global => null;
+
+   procedure Detach (Index : Entity_Index)
+         with Pre => Check_Invariant,
+            Post => Check_Invariant and then Sparse.Lookup (S, Index) = 0;
    --  Storage-only removal.  Deliberately does NOT touch the world
    --  signature: W.Destroy calls this while it is already clearing the
    --  whole signature, and calling Note_Removed there would be redundant
@@ -232,8 +236,12 @@ package body ECS.Pools is
       return True;
    end Check_Invariant;
 
+procedure Register_Pool with SPARK_Mode => Off is
+   begin
+      W.Register_Component (Kind, Detach'Access);
+   end Register_Pool;
+
 begin
    Clear;
-   --  SPARK_MODE => OFF
-   W.Register_Component (Kind, Detach'Access);
+   Register_Pool;
 end ECS.Pools;

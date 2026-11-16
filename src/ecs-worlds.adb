@@ -1,4 +1,4 @@
-package body ECS.Worlds is
+package body ECS.Worlds with SPARK_Mode is
 
    Slots    : Slot_Array;
    Free     : Free_Array;

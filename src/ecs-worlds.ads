@@ -21,7 +21,7 @@
 generic
    type Component_Kind is (<>);
    Max_Entities : Positive;
-package ECS.Worlds is
+package ECS.Worlds with SPARK_Mode is
 
    pragma Elaborate_Body;
 

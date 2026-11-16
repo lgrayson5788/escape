@@ -32,7 +32,7 @@ generic
    with package Owners is new ECS.Sequences (Element => Entity_Index, others => <>);
    with package Sparse is new ECS.Sparse_Maps (others => <>);
 
-package ECS.Pools is
+package ECS.Pools with SPARK_Mode is
 
    pragma Elaborate_Body;
 
@@ -64,7 +64,9 @@ package ECS.Pools is
    --  Attaches, or overwrites if already present.  Ok is False only on
    --  capacity exhaustion (bounded backing) or a dead handle.  Never raises.
 
-   procedure Unset (E : Entity);
+   procedure Unset (E : Entity)
+      with Pre => Check_Invariant,
+            Post => Check_Invariant and then not Has (E);
    --  No-op if absent.  O(1): the last dense row is moved into the hole.
 
    ---------------------------------------------------------------------------
