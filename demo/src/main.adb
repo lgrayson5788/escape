@@ -142,22 +142,23 @@ procedure Main is
    end Render;
 
    procedure Read_Input is
-      Line : String (1 .. 16);
-      Last : Natural;
+      Key : Character;  -- single char to read end user key press
       Vel  : Velocity_Data := (DX => 0.0, DY => 0.0);
    begin
-      Put ("Move [w/a/s/d, .=wait, q=quit]: ");
-      Get_Line (Line, Last);
-      if Last >= 1 then
-         case Line (1) is
-            when 'w' | 'W' => Vel.DY := -1.0;
-            when 's' | 'S' => Vel.DY :=  1.0;
-            when 'a' | 'A' => Vel.DX := -1.0;
-            when 'd' | 'D' => Vel.DX :=  1.0;
-            when 'q' | 'Q' => Alive  := False;
-            when others    => null;
+      Put ("Move [w/a/s/d, q=quit]: ");
+      loop
+         Get_Immediate (Key); -- Reads a single key press, prevents the need of hitting enter
+         case Key is
+               when 'w' | 'W' => Vel.DY := -1.0;
+               when 's' | 'S' => Vel.DY :=  1.0;
+               when 'a' | 'A' => Vel.DX := -1.0;
+               when 'd' | 'D' => Vel.DX :=  1.0;
+               when 'q' | 'Q' => Alive  := False;
+               when others    => null;
          end case;
-      end if;
+         exit when Key in 'w' | 'W' | 's' | 'S' -- leave loop if the key is valid
+                        | 'a' | 'A' | 'd' | 'D' | 'q' | 'Q';
+      end loop;
       Velocities.Set (Player, Vel, Ok);
    end Read_Input;
 
